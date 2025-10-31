@@ -1,0 +1,1176 @@
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using MySql.Data.MySqlClient;
+using System.Text;
+using System.Globalization;
+
+namespace ExcelMonitoring1
+{
+    class Program
+    {
+        // MySQL integration flags
+        static bool MySqlEnabled = false;
+        static string? MySqlConnectionString = null;
+        static string? MySqlTableName = null;
+        static string? MySqlDatabaseName = null;
+
+        static void Main(string[] args)
+        {
+            DrawTitle("Batam Schneider Entry Data (Batam S.E.D) Program");
+
+            // Apply Russian (RUS-95) environment: try to use Windows-1251 encoding and ru-RU culture.
+            try
+            {
+                var cp1251 = Encoding.GetEncoding(1251);
+                Console.InputEncoding = cp1251;
+                Console.OutputEncoding = cp1251;
+            }
+            catch
+            {
+                // If CP1251 is unavailable, keep existing encodings (no-op)
+            }
+            try
+            {
+                var ru = new CultureInfo("ru-RU");
+                CultureInfo.CurrentCulture = ru;
+                CultureInfo.CurrentUICulture = ru;
+            }
+            catch
+            {
+                // ignore culture set errors
+            }
+
+            Console.Write("Masukkan path file (tekan Enter untuk default): ");
+            string inputPath = Console.ReadLine() ?? "";
+            string filePath = string.IsNullOrWhiteSpace(inputPath)
+                ? "Batam_Schneider_Entry_Data_File1.xlsx"
+                : inputPath.Trim();
+
+            Console.Write("Masukkan nama data (nama sheet): ");
+            string? inputSheet = Console.ReadLine();
+            string sheetName = string.IsNullOrWhiteSpace(inputSheet) ? "Data1" : inputSheet.Trim();
+
+            EnsureWorkbookAndSheet(filePath, sheetName);
+            EnsureHeaderRow(filePath, sheetName);
+
+            // Konfigurasi MySQL
+            Console.Write("Aktifkan integrasi MySQL? (Y/N): ");
+            var yn = (Console.ReadLine() ?? string.Empty).Trim().ToUpperInvariant();
+            if (yn == "Y")
+            {
+                ConfigureMySQL(sheetName);
+            }
+
+            while (true)
+            {
+                Console.WriteLine();
+                DrawMenu(new[]
+                {
+                    "(A) Impor CSV",
+                    "(C) Tambah baris",
+                    "(R) Tampilkan baris",
+                    "(U) Perbarui baris",
+                    "(D) Hapus baris",
+                    "(M) Monitor langsung",
+                    "(S) Settings MySQL",
+                    "(Q) Keluar"
+                });
+                Console.Write("Pilihan: ");
+                string? sel = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(sel)) continue;
+                sel = sel.Trim().ToUpperInvariant();
+
+                try
+                {
+                    if (sel == "A")
+                    {
+                        Console.Write("Masukkan path file CSV untuk diimpor: ");
+                        var csvPath = (Console.ReadLine() ?? string.Empty).Trim();
+                        if (File.Exists(csvPath))
+                        {
+                            int added = ImportCsvAndAddRows(filePath, sheetName, csvPath);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Impor selesai. Baris ditambahkan: {added}");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine("File CSV tidak ditemukan.");
+                            Console.ResetColor();
+                        }
+                    }
+                    else if (sel == "C")
+                    {
+                        Console.Write("Masukkan nilai dipisah koma untuk ditambahkan: ");
+                        var values = ReadCsvLine();
+                        if (values.Length >= EntryRecord.Headers.Length)
+                        {
+                            var rec = ParseEntryFromFields(values, EntryRecord.Headers);
+                            AddEntryRecord(filePath, sheetName, rec);
+                        }
+                        else
+                        {
+                            // Non-entry row: prefix empty Id
+                            var pref = new string[values.Length + 1];
+                            pref[0] = string.Empty;
+                            Array.Copy(values, 0, pref, 1, values.Length);
+                            AddRow(filePath, sheetName, pref);
+                        }
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("Baris ditambahkan.");
+                        Console.ResetColor();
+                    }
+                    else if (sel == "R")
+                    {
+                        var rows = ReadRows(filePath, sheetName);
+                        if (!rows.Any())
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkGray;
+                            Console.WriteLine("(tidak ada baris)");
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            PrintRowsTable(rows);
+                        }
+                    }
+                    else if (sel == "U")
+                    {
+                        Console.Write("Masukkan indeks baris untuk diupdate (1-based): ");
+                        var idxInput = Console.ReadLine();
+                        if (!int.TryParse(idxInput, out int idx) || idx < 1)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine("Indeks tidak valid.");
+                            Console.ResetColor();
+                            continue;
+                        }
+                        Console.Write("Masukkan nilai baru dipisah koma: ");
+                        var values = ReadCsvLine();
+                        bool ok;
+                        if (values.Length >= EntryRecord.Headers.Length)
+                        {
+                            var rec = ParseEntryFromFields(values, EntryRecord.Headers);
+                            ok = UpdateEntryRecord(filePath, sheetName, idx, rec);
+                        }
+                        else
+                        {
+                            // update non-entry row: prefix empty Id and update
+                            var pref = new string[values.Length + 1];
+                            pref[0] = string.Empty;
+                            Array.Copy(values, 0, pref, 1, values.Length);
+                            ok = UpdateRow(filePath, sheetName, idx, pref);
+                        }
+
+                        Console.ForegroundColor = ok ? ConsoleColor.Green : ConsoleColor.Yellow;
+                        Console.WriteLine(ok ? "Baris diperbarui." : "Baris tidak ditemukan.");
+                        Console.ResetColor();
+                    }
+                    else if (sel == "D")
+                    {
+                        Console.Write("Masukkan indeks baris untuk dihapus (1-based): ");
+                        var idxInput = Console.ReadLine();
+                        if (!int.TryParse(idxInput, out int idx) || idx < 1)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine("Indeks tidak valid.");
+                            Console.ResetColor();
+                            continue;
+                        }
+                        bool ok = DeleteRowWithSync(filePath, sheetName, idx);
+                        Console.ForegroundColor = ok ? ConsoleColor.Green : ConsoleColor.Yellow;
+                        Console.WriteLine(ok ? "Baris dihapus." : "Baris tidak ditemukan.");
+                        Console.ResetColor();
+                    }
+                    else if (sel == "M")
+                    {
+                        LiveMonitor(filePath, sheetName);
+                    }
+                    else if (sel == "S")
+                    {
+                        ConfigureMySQL(sheetName);
+                    }
+                    else if (sel == "Q")
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("Sampai jumpa.");
+                        Console.ResetColor();
+                        break;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("Pilihan tidak dikenal.");
+                        Console.ResetColor();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Kesalahan: " + ex.Message);
+                    Console.ResetColor();
+                }
+            }
+        }
+
+        // ---------- MySQL Configuration ----------
+        static void ConfigureMySQL(string sheetName)
+        {
+            Console.WriteLine("\n=== Konfigurasi MySQL ===");
+
+            // Get MySQL server connection info first
+            Console.WriteLine("Masukkan informasi server MySQL:");
+            Console.Write("Server (default: localhost): ");
+            string server = (Console.ReadLine() ?? "localhost").Trim();
+            if (string.IsNullOrEmpty(server)) server = "localhost";
+
+            Console.Write("Port (default: 3306): ");
+            string portInput = (Console.ReadLine() ?? "3306").Trim();
+            if (!int.TryParse(portInput, out int port)) port = 3306;
+
+            Console.Write("Username (default: root): ");
+            string username = (Console.ReadLine() ?? "root").Trim();
+            if (string.IsNullOrEmpty(username)) username = "root";
+
+            Console.Write("Password: ");
+            string password = (Console.ReadLine() ?? "").Trim();
+
+            // Try to connect to MySQL server without database first
+            string baseConnStr = $"server={server};port={port};user={username};password={password};";
+
+            try
+            {
+                using var testConn = new MySqlConnection(baseConnStr);
+                testConn.Open();
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("✓ Berhasil terhubung ke server MySQL");
+                Console.ResetColor();
+
+                // Get or create database
+                Console.Write("Nama database (default: batam_sed_db): ");
+                MySqlDatabaseName = (Console.ReadLine() ?? "batam_sed_db").Trim();
+                if (string.IsNullOrEmpty(MySqlDatabaseName)) MySqlDatabaseName = "batam_sed_db";
+
+                // Create database if not exists
+                CreateDatabaseIfNotExists(baseConnStr, MySqlDatabaseName);
+
+                // Now create full connection string with database
+                MySqlConnectionString = $"server={server};port={port};database={MySqlDatabaseName};user={username};password={password};";
+
+                // Get table name
+                Console.Write($"Nama tabel (default: {SanitizeTableName(sheetName)}): ");
+                var tbl = (Console.ReadLine() ?? string.Empty).Trim();
+                MySqlTableName = string.IsNullOrEmpty(tbl) ? SanitizeTableName(sheetName) : SanitizeTableName(tbl);
+
+                // Ensure table exists
+                EnsureMySqlTable(MySqlConnectionString, MySqlTableName);
+                MySqlEnabled = true;
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"✓ MySQL diaktifkan. Database: {MySqlDatabaseName}, Tabel: {MySqlTableName}");
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                MySqlEnabled = false;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("✗ Gagal menghubungkan ke MySQL:");
+                Console.WriteLine($"  Error: {ex.Message}");
+                Console.ResetColor();
+
+                Console.Write("Ingin coba konfigurasi ulang? (Y/N): ");
+                var retry = (Console.ReadLine() ?? string.Empty).Trim().ToUpperInvariant();
+                if (retry == "Y")
+                {
+                    ConfigureMySQL(sheetName);
+                }
+            }
+        }
+
+        static void CreateDatabaseIfNotExists(string baseConnStr, string databaseName)
+        {
+            try
+            {
+                using var conn = new MySqlConnection(baseConnStr);
+                conn.Open();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"CREATE DATABASE IF NOT EXISTS `{databaseName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
+                cmd.ExecuteNonQuery();
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"✓ Database '{databaseName}' siap digunakan");
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"⚠ Peringatan: Gagal membuat database '{databaseName}': {ex.Message}");
+                Console.WriteLine("  Melanjutkan dengan database yang sudah ada...");
+                Console.ResetColor();
+            }
+        }
+
+        // ---------- UI helpers ----------
+        static void DrawTitle(string title)
+        {
+            var orig = Console.ForegroundColor;
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(new string('=', Math.Min(title.Length + 8, 120)));
+            Console.WriteLine($" {title}");
+            Console.WriteLine(new string('=', Math.Min(title.Length + 8, 120)));
+            Console.WriteLine();
+            Console.ForegroundColor = orig;
+        }
+
+        static void DrawMenu(string[] lines)
+        {
+            var orig = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.WriteLine("Menu:");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            foreach (var l in lines) Console.WriteLine($" {l}");
+            Console.ForegroundColor = orig;
+        }
+
+        static void PrintRowsTable(List<string[]> rows)
+        {
+            // Determine column count using header row if present; otherwise max columns
+            int colCount = rows.Max(r => r.Length);
+            var headers = rows.Count > 0 ? rows[0] : Enumerable.Range(0, colCount).Select(i => $"Col{i + 1}").ToArray();
+
+            // compute max widths (cap to30 for readability)
+            int[] widths = new int[colCount];
+            for (int c = 0; c < colCount; c++)
+            {
+                int max = 0;
+                for (int r = 0; r < rows.Count; r++)
+                {
+                    var cell = c < rows[r].Length ? rows[r][c] : string.Empty;
+                    max = Math.Max(max, (cell ?? string.Empty).Length);
+                }
+                widths[c] = Math.Min(Math.Max(max, headers.ElementAtOrDefault(c)?.Length ?? 0), 30);
+            }
+
+            // print header (use first row as header if it matches EntryRecord.Headers; otherwise print generated)
+            bool firstIsHeaders = headers.Length >= EntryRecord.Headers.Length + 1 && EntryRecord.Headers.SequenceEqual(headers.Skip(1).Take(EntryRecord.Headers.Length));
+            string[] hdrToPrint = firstIsHeaders ? headers : (new[] { "Id" }).Concat(EntryRecord.Headers.Take(Math.Max(0, colCount - 1))).ToArray();
+
+            // draw header
+            Console.ForegroundColor = ConsoleColor.White;
+            for (int c = 0; c < colCount; c++)
+            {
+                var h = c < hdrToPrint.Length ? hdrToPrint[c] : $"Col{c + 1}";
+                Console.Write($"| {Truncate(h, widths[c]).PadRight(widths[c])} ");
+            }
+            Console.WriteLine("|");
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine(new string('-', colCount * (3 + widths.Max())));
+
+            // draw rows (skip header row from file if it equals EntryRecord.Headers)
+            int start = firstIsHeaders ? 1 : 0;
+            Console.ForegroundColor = ConsoleColor.Gray;
+            for (int r = start; r < rows.Count; r++)
+            {
+                var row = rows[r];
+                for (int c = 0; c < colCount; c++)
+                {
+                    var cell = c < row.Length ? (row[c] ?? string.Empty) : string.Empty;
+                    Console.Write($"| {Truncate(cell, widths[c]).PadRight(widths[c])} ");
+                }
+                Console.WriteLine($"| ({r + 1})");
+            }
+            Console.ResetColor();
+        }
+
+        static string Truncate(string s, int max) => s.Length <= max ? s : s.Substring(0, max - 3) + "...";
+        static string[] ReadCsvLine()
+        {
+            var line = Console.ReadLine() ?? string.Empty;
+            return SplitCsvLine(line);
+        }
+
+        static void EnsureWorkbookAndSheet(string path, string sheetName)
+        {
+            // Create file if missing
+            if (!File.Exists(path))
+            {
+                using var createDoc = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook);
+                var createWbPart = createDoc.AddWorkbookPart();
+                createWbPart.Workbook = new Workbook();
+                var worksheetPart = createWbPart.AddNewPart<WorksheetPart>();
+                worksheetPart.Worksheet = new Worksheet(new SheetData());
+                var sheets = createWbPart.Workbook.AppendChild(new Sheets());
+                var sheet = new Sheet()
+                {
+                    Id = createWbPart.GetIdOfPart(worksheetPart),
+                    SheetId = 1,
+                    Name = sheetName
+                };
+                sheets.Append(sheet);
+                createWbPart.Workbook.Save();
+                return;
+            }
+
+            // Open existing and ensure sheet exists
+            using var doc = SpreadsheetDocument.Open(path, true);
+            var wbPart = doc.WorkbookPart ?? doc.AddWorkbookPart();
+            wbPart.Workbook ??= new Workbook();
+
+            var sheetsElement = wbPart.Workbook.GetFirstChild<Sheets>() ?? wbPart.Workbook.AppendChild(new Sheets());
+
+            var existing = sheetsElement.Elements<Sheet>().FirstOrDefault(s => string.Equals(s.Name?.Value, sheetName, StringComparison.OrdinalIgnoreCase));
+            if (existing == null)
+            {
+                var worksheetPart = wbPart.AddNewPart<WorksheetPart>();
+                worksheetPart.Worksheet = new Worksheet(new SheetData());
+                uint newId = sheetsElement.Elements<Sheet>().Select(s => s.SheetId?.Value ?? 0u).DefaultIfEmpty(0u).Max() + 1;
+                var sheet = new Sheet()
+                {
+                    Id = wbPart.GetIdOfPart(worksheetPart),
+                    SheetId = newId,
+                    Name = sheetName
+                };
+                sheetsElement.Append(sheet);
+                wbPart.Workbook.Save();
+            }
+        }
+
+        static WorksheetPart? GetWorksheetPartByName(WorkbookPart workbookPart, string sheetName)
+        {
+            var sheets = workbookPart.Workbook?.GetFirstChild<Sheets>();
+            if (sheets == null) return null;
+            var sheet = sheets.Elements<Sheet>().FirstOrDefault(s => string.Equals(s.Name?.Value, sheetName, StringComparison.OrdinalIgnoreCase));
+            if (sheet == null) return null;
+            var id = sheet.Id?.Value;
+            if (string.IsNullOrEmpty(id)) return null;
+            return workbookPart.GetPartById(id) as WorksheetPart;
+        }
+
+        static List<string[]> ReadRows(string path, string sheetName)
+        {
+            var result = new List<string[]>();
+            try
+            {
+                using var doc = SpreadsheetDocument.Open(path, false);
+                var wbPart = doc.WorkbookPart;
+                if (wbPart == null) return result;
+                var wsPart = GetWorksheetPartByName(wbPart, sheetName);
+                if (wsPart == null) return result;
+                var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
+                if (sheetData == null) return result;
+
+                var sst = wbPart.SharedStringTablePart?.SharedStringTable;
+
+                foreach (var row in sheetData.Elements<Row>())
+                {
+                    var cells = row.Elements<Cell>().ToArray();
+                    var values = new List<string>();
+                    foreach (var cell in cells)
+                    {
+                        string? cellText = GetCellText(cell, sst);
+                        values.Add(cellText ?? string.Empty);
+                    }
+                    result.Add(values.ToArray());
+                }
+            }
+            catch
+            {
+                // Fail silently and return what we have — callers will handle empty results.
+            }
+            return result;
+        }
+
+        static string? GetCellText(Cell cell, SharedStringTable? sst)
+        {
+            // Handle shared strings first
+            var dt = cell.DataType?.Value;
+            if (dt == CellValues.SharedString)
+            {
+                if (int.TryParse(cell.CellValue?.InnerText, out int sstIndex) && sst != null)
+                {
+                    var ssi = sst.Elements<SharedStringItem>().ElementAtOrDefault(sstIndex);
+                    // SharedStringItem may contain Text or InnerText
+                    return ssi?.InnerText ?? ssi?.Text?.Text;
+                }
+                return cell.CellValue?.InnerText;
+            }
+
+            // Inline string
+            if (dt == CellValues.InlineString)
+            {
+                return cell.InnerText;
+            }
+
+            // Otherwise numeric or boolean or formula result
+            return cell.CellValue?.InnerText;
+        }
+
+        static int InsertSharedStringItem(WorkbookPart wbPart, string text)
+        {
+            var sstPart = wbPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault()
+             ?? wbPart.AddNewPart<SharedStringTablePart>();
+
+            // Use part's existing root if any; only assign when creating a new SharedStringTable
+            var sst = sstPart.SharedStringTable;
+            if (sst == null)
+            {
+                sst = new SharedStringTable();
+                sstPart.SharedStringTable = sst;
+            }
+
+            // Look for an existing matching entry
+            int index = 0;
+            foreach (var item in sst.Elements<SharedStringItem>())
+            {
+                if ((item.Text?.Text ?? item.InnerText) == text)
+                    return index;
+                index++;
+            }
+
+            // Not found -> append
+            sst.AppendChild(new SharedStringItem(new Text(text)));
+            sst.Save(); // save the root element
+            return index;
+        }
+
+        static void AddRow(string path, string sheetName, string[] values)
+        {
+            using var doc = SpreadsheetDocument.Open(path, true);
+            var wbPart = doc.WorkbookPart ?? throw new InvalidOperationException("WorkbookPart tidak ditemukan");
+            var wsPart = GetWorksheetPartByName(wbPart, sheetName) ?? throw new InvalidOperationException("Worksheet tidak ditemukan");
+            var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>() ?? wsPart.Worksheet.AppendChild(new SheetData());
+
+            uint nextRowIndex = 1;
+            var lastRow = sheetData.Elements<Row>().LastOrDefault();
+            if (lastRow != null) nextRowIndex = (lastRow.RowIndex?.Value ?? 0u) + 1u;
+
+            var row = new Row() { RowIndex = nextRowIndex };
+            for (int i = 0; i < values.Length; i++)
+            {
+                var text = values[i] ?? string.Empty;
+                int sstIndex = InsertSharedStringItem(wbPart, text);
+
+                var cell = new Cell()
+                {
+                    CellReference = GetCellReference(i, (int)nextRowIndex),
+                    DataType = new EnumValue<CellValues>(CellValues.SharedString),
+                    CellValue = new CellValue(sstIndex.ToString())
+                };
+                row.Append(cell);
+            }
+            sheetData.Append(row);
+            wsPart.Worksheet.Save();
+            wbPart.Workbook.Save();
+        }
+
+        static bool UpdateRow(string path, string sheetName, int rowIndex, string[] values)
+        {
+            using var doc = SpreadsheetDocument.Open(path, true);
+            var wbPart = doc.WorkbookPart;
+            if (wbPart == null) return false;
+            var wsPart = GetWorksheetPartByName(wbPart, sheetName);
+            if (wsPart == null) return false;
+            var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
+            if (sheetData == null) return false;
+
+            var row = sheetData.Elements<Row>().FirstOrDefault(r => (r.RowIndex?.Value ?? 0u) == (uint)rowIndex);
+            if (row == null) return false;
+
+            row.RemoveAllChildren<Cell>();
+            for (int i = 0; i < values.Length; i++)
+            {
+                var text = values[i] ?? string.Empty;
+                int sstIndex = InsertSharedStringItem(wbPart, text);
+
+                var cell = new Cell()
+                {
+                    CellReference = GetCellReference(i, rowIndex),
+                    DataType = new EnumValue<CellValues>(CellValues.SharedString),
+                    CellValue = new CellValue(sstIndex.ToString())
+                };
+                row.Append(cell);
+            }
+            wsPart.Worksheet.Save();
+            wbPart.Workbook.Save();
+            return true;
+        }
+
+        static bool DeleteRow(string path, string sheetName, int rowIndex)
+        {
+            using var doc = SpreadsheetDocument.Open(path, true);
+            var wbPart = doc.WorkbookPart;
+            if (wbPart == null) return false;
+            var wsPart = GetWorksheetPartByName(wbPart, sheetName);
+            if (wsPart == null) return false;
+            var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>();
+            if (sheetData == null) return false;
+
+            var row = sheetData.Elements<Row>().FirstOrDefault(r => (r.RowIndex?.Value ?? 0u) == (uint)rowIndex);
+            if (row == null) return false;
+
+            row.Remove();
+            wsPart.Worksheet.Save();
+            wbPart.Workbook.Save();
+            return true;
+        }
+
+        static bool DeleteRowWithSync(string path, string sheetName, int rowIndex)
+        {
+            // read row to get Id
+            var rows = ReadRows(path, sheetName);
+            if (rowIndex < 1 || rowIndex > rows.Count) return false;
+            var row = rows[rowIndex - 1];
+            long id = 0;
+            if (row.Length > 0 && long.TryParse(row[0], out var parsed)) id = parsed;
+
+            bool ok = DeleteRow(path, sheetName, rowIndex);
+            if (ok && MySqlEnabled && id > 0 && !string.IsNullOrEmpty(MySqlConnectionString) && !string.IsNullOrEmpty(MySqlTableName))
+            {
+                try
+                {
+                    DeleteEntryFromMySql(MySqlConnectionString, MySqlTableName, id);
+                }
+                catch (Exception ex)
+                {
+                    // Log DB delete error but keep Excel change
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Peringatan MySQL (hapus):\n" + ex.ToString());
+                    Console.ResetColor();
+                }
+            }
+            return ok;
+        }
+
+        static void LiveMonitor(string path, string sheetName)
+        {
+            // Monitor the workbook file and refresh the console display on changes.
+            string? folder = Path.GetDirectoryName(path);
+            string file = Path.GetFileName(path);
+            folder = string.IsNullOrEmpty(folder) ? Directory.GetCurrentDirectory() : folder;
+
+            using var watcher = new FileSystemWatcher(folder, file);
+            watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName;
+
+            bool needRefresh = true;
+
+            FileSystemEventHandler onChange = (s, e) => needRefresh = true;
+            RenamedEventHandler onRenamed = (s, e) => needRefresh = true;
+
+            watcher.Changed += onChange;
+            watcher.Created += onChange;
+            watcher.Renamed += onRenamed;
+            watcher.EnableRaisingEvents = true;
+
+            try
+            {
+                DrawTitle($"Monitor langsung - {file} : {sheetName} (tekan Q untuk berhenti)");
+                while (true)
+                {
+                    if (needRefresh)
+                    {
+                        try
+                        {
+                            var rows = ReadRows(path, sheetName);
+                            Console.Clear();
+                            DrawTitle($"Monitor langsung - {file} : {sheetName} (tekan Q untuk berhenti)");
+                            if (!rows.Any())
+                            {
+                                Console.ForegroundColor = ConsoleColor.DarkGray;
+                                Console.WriteLine("(tidak ada baris)");
+                                Console.ResetColor();
+                            }
+                            else
+                            {
+                                PrintRowsTable(rows);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine("Kesalahan membaca file: " + ex.Message);
+                            Console.ResetColor();
+                        }
+                        needRefresh = false;
+                    }
+
+                    if (Console.KeyAvailable)
+                    {
+                        var key = Console.ReadKey(true);
+                        if (key.Key == ConsoleKey.Q)
+                        {
+                            Console.WriteLine("Menghentikan monitor...");
+                            break;
+                        }
+                    }
+
+                    Thread.Sleep(300);
+                }
+            }
+            finally
+            {
+                watcher.EnableRaisingEvents = false;
+            }
+        }
+
+        static string GetCellReference(int columnIndexZeroBased, int rowIndex)
+        {
+            int dividend = columnIndexZeroBased + 1;
+            string columnName = String.Empty;
+            while (dividend > 0)
+            {
+                int modulo = (dividend - 1) % 26;
+                columnName = Convert.ToChar(65 + modulo) + columnName;
+                dividend = (dividend - modulo) / 26;
+            }
+            return $"{columnName}{rowIndex}";
+        }
+
+        record EntryRecord(
+            string Date, // "yyyy-MM-dd" preferred
+            string Shift,
+            string CodeReference,
+            string MachineNumber,
+            string Area, // e.g. "Backend1"
+            string ProcessAutoAdjustment,
+            string ProcessTopTec,
+            string ProcessFinalTester,
+            string ProcessPackaging,
+            int QuantityInput,
+            int QuantityGood,
+            int QuantityBad,
+            int Reject
+        )
+        {
+            public string[] ToValues() =>
+                new string[]
+                {
+                    Date,
+                    Shift,
+                    CodeReference,
+                    MachineNumber,
+                    Area,
+                    ProcessAutoAdjustment,
+                    ProcessTopTec,
+                    ProcessFinalTester,
+                    ProcessPackaging,
+                    QuantityInput.ToString(),
+                    QuantityGood.ToString(),
+                    QuantityBad.ToString(),
+                    Reject.ToString()
+                };
+
+            public static string[] Headers => new[]
+            {
+                "Date","Shift","CodeReference","MachineNumber","Area",
+                "AutoAdjustment","TopTec","FinalTester","Packaging",
+                "QuantityInput","QuantityGood","QuantityBad","Reject"
+            };
+        }
+
+        static EntryRecord PromptForEntryRecord()
+        {
+            Console.WriteLine("Masukkan nilai record (tekan Enter untuk melewati / default kosong):");
+            string Read(string prompt)
+            {
+                Console.Write(prompt);
+                return (Console.ReadLine() ?? string.Empty).Trim();
+            }
+
+            string date = Read("Tanggal (yyyy-MM-dd): ");
+            string shift = Read("Shift: ");
+            string code = Read("Kode Referensi: ");
+            string machine = Read("Nomor Mesin: ");
+            string area = Read("Area (Backend1/2/3): ");
+            string autoAdj = Read("Proses Auto Adjustment: ");
+            string topTec = Read("Proses TopTec: ");
+            string final = Read("Proses Final Tester: ");
+            string pack = Read("Proses Packaging: ");
+
+            static int ReadInt(string label)
+            {
+                Console.Write(label);
+                var s = Console.ReadLine();
+                return int.TryParse(s, out var v) ? v : 0;
+            }
+
+            int qtyIn = ReadInt("Jumlah Input: ");
+            int qtyGood = ReadInt("Jumlah Good: ");
+            int qtyBad = ReadInt("Jumlah Bad: ");
+            int reject = ReadInt("Jumlah Reject: ");
+
+            return new EntryRecord(date, shift, code, machine, area, autoAdj, topTec, final, pack, qtyIn, qtyGood, qtyBad, reject);
+        }
+
+        static void EnsureHeaderRow(string path, string sheetName)
+        {
+            using var doc = SpreadsheetDocument.Open(path, true);
+            var wbPart = doc.WorkbookPart ?? throw new InvalidOperationException("Workbook tidak ditemukan");
+            var wsPart = GetWorksheetPartByName(wbPart, sheetName) ?? throw new InvalidOperationException("Worksheet tidak ditemukan");
+            var sheetData = wsPart.Worksheet.GetFirstChild<SheetData>() ?? wsPart.Worksheet.AppendChild(new SheetData());
+
+            var firstRow = sheetData.Elements<Row>().FirstOrDefault();
+            var headers = EntryRecord.Headers;
+            bool needsHeader = true;
+
+            if (firstRow != null)
+            {
+                var firstValues = firstRow.Elements<Cell>().Select(c => GetCellText(c, wbPart.SharedStringTablePart?.SharedStringTable) ?? string.Empty).ToArray();
+                // if sheet already has Id + headers
+                if (firstValues.Length >= headers.Length + 1 && headers.SequenceEqual(firstValues.Skip(1).Take(headers.Length)))
+                    needsHeader = false;
+            }
+
+            if (needsHeader)
+            {
+                var headerRow = new Row() { RowIndex = 1u };
+                // add Id as first column
+                int sstIndex0 = InsertSharedStringItem(wbPart, "Id");
+                headerRow.Append(new Cell()
+                {
+                    CellReference = GetCellReference(0, 1),
+                    DataType = new EnumValue<CellValues>(CellValues.SharedString),
+                    CellValue = new CellValue(sstIndex0.ToString())
+                });
+
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    int sstIndex = InsertSharedStringItem(wbPart, headers[i]);
+                    var cell = new Cell()
+                    {
+                        CellReference = GetCellReference(i + 1, 1),
+                        DataType = new EnumValue<CellValues>(CellValues.SharedString),
+                        CellValue = new CellValue(sstIndex.ToString())
+                    };
+                    headerRow.Append(cell);
+                }
+                sheetData.InsertAt(headerRow, 0);
+                wsPart.Worksheet.Save();
+                wbPart.Workbook.Save();
+            }
+        }
+
+        static void AddEntryRecord(string path, string sheetName, EntryRecord rec)
+        {
+            // Insert to DB first to get id (if enabled), then write row with Id prefix
+            long id = 0;
+            if (MySqlEnabled && !string.IsNullOrEmpty(MySqlConnectionString) && !string.IsNullOrEmpty(MySqlTableName))
+            {
+                try
+                {
+                    id = InsertEntryToMySql(MySqlConnectionString, MySqlTableName, rec);
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Peringatan MySQL (sisip):\n" + ex.ToString());
+                    Console.ResetColor();
+                    id = 0;
+                }
+            }
+
+            var values = rec.ToValues();
+            var withId = new string[values.Length + 1];
+            withId[0] = id > 0 ? id.ToString() : string.Empty;
+            Array.Copy(values, 0, withId, 1, values.Length);
+            AddRow(path, sheetName, withId);
+        }
+
+        static int ImportCsvAndAddRows(string workbookPath, string sheetName, string csvPath)
+        {
+            var allLines = File.ReadAllLines(csvPath).Select(l => l.Trim()).Where(l => !string.IsNullOrEmpty(l)).ToArray();
+            if (allLines.Length == 0) return 0;
+
+            bool firstIsHeader = false;
+            var headers = EntryRecord.Headers;
+            var firstFields = SplitCsvLine(allLines[0]);
+            if (firstFields.Length >= headers.Length && headers.SequenceEqual(firstFields.Take(headers.Length), StringComparer.OrdinalIgnoreCase))
+                firstIsHeader = true;
+
+            int startIndex = firstIsHeader ? 1 : 0;
+            int added = 0;
+            for (int i = startIndex; i < allLines.Length; i++)
+            {
+                var fields = SplitCsvLine(allLines[i]);
+                var rec = ParseEntryFromFields(fields, headers);
+                AddEntryRecord(workbookPath, sheetName, rec);
+                added++;
+            }
+            return added;
+        }
+
+        static string[] SplitCsvLine(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return Array.Empty<string>();
+
+            var parts = new List<string>();
+            bool inQuotes = false;
+            var cur = new System.Text.StringBuilder();
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                if (c == '"')
+                {
+                    if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        // escaped quote
+                        cur.Append('"');
+                        i++; // skip next quote
+                    }
+                    else
+                    {
+                        inQuotes = !inQuotes;
+                    }
+                    continue;
+                }
+
+                if (c == ',' && !inQuotes)
+                {
+                    parts.Add(cur.ToString().Trim());
+                    cur.Clear();
+                }
+                else
+                {
+                    cur.Append(c);
+                }
+            }
+            parts.Add(cur.ToString().Trim());
+
+            // Trim surrounding quotes on each field
+            for (int i = 0; i < parts.Count; i++)
+            {
+                var p = parts[i];
+                if (p.Length >= 2 && p.StartsWith("\"") && p.EndsWith("\""))
+                    p = p.Substring(1, p.Length - 2);
+                parts[i] = p;
+            }
+
+            return parts.ToArray();
+        }
+
+        static EntryRecord ParseEntryFromFields(string[] fields, string[] headers)
+        {
+            // assume order matches headers
+            string Get(int idx) => idx >= 0 && idx < fields.Length ? fields[idx] : string.Empty;
+
+            string date = Get(0);
+            string shift = Get(1);
+            string codeRef = Get(2);
+            string machine = Get(3);
+            string area = Get(4);
+            string autoAdj = Get(5);
+            string topTec = Get(6);
+            string final = Get(7);
+            string packaging = Get(8);
+            int qtyIn = TryParseInt(Get(9));
+            int qtyGood = TryParseInt(Get(10));
+            int qtyBad = TryParseInt(Get(11));
+            int reject = TryParseInt(Get(12));
+
+            return new EntryRecord(date, shift, codeRef, machine, area, autoAdj, topTec, final, packaging, qtyIn, qtyGood, qtyBad, reject);
+        }
+
+        static int TryParseInt(string s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return 0;
+            if (int.TryParse(s, out var v)) return v;
+            var digits = new string(s.Where(c => char.IsDigit(c) || c == '-').ToArray());
+            if (int.TryParse(digits, out v)) return v;
+            return 0;
+        }
+
+        // ---------------- MySQL helpers ----------------
+
+        static string SanitizeTableName(string raw)
+        {
+            if (string.IsNullOrEmpty(raw)) return "sheet_data";
+            var t = new string(raw.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());
+            if (string.IsNullOrEmpty(t)) return "sheet_data";
+            return t.Length > 64 ? t.Substring(0, 64) : t;
+        }
+
+        static void EnsureMySqlTable(string? connStr, string? tableName)
+        {
+            if (string.IsNullOrEmpty(connStr) || string.IsNullOrEmpty(tableName))
+                throw new ArgumentException("Connection string atau nama tabel hilang.");
+
+            try
+            {
+                using var conn = new MySqlConnection(connStr);
+                conn.Open();  // Test connection
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $@"
+        CREATE TABLE IF NOT EXISTS `{tableName}` (
+            `id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            `Date` DATE NULL,
+            `Shift` VARCHAR(32) NULL,
+            `CodeReference` VARCHAR(128) NULL,
+            `MachineNumber` VARCHAR(64) NULL,
+            `Area` VARCHAR(64) NULL,
+            `AutoAdjustment` VARCHAR(128) NULL,
+            `TopTec` VARCHAR(128) NULL,
+            `FinalTester` VARCHAR(128) NULL,
+            `Packaging` VARCHAR(128) NULL,
+            `QuantityInput` INT NULL,
+            `QuantityGood` INT NULL,
+            `QuantityBad` INT NULL,
+            `Reject` INT NULL,
+            `CreatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB;";
+                cmd.ExecuteNonQuery();
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"✓ Tabel '{tableName}' siap digunakan");
+                Console.ResetColor();
+            }
+            catch (MySqlException ex)
+            {
+                throw new Exception($"Gagal menghubungkan ke MySQL: {ex.Message}", ex);
+            }
+        }
+
+        static long InsertEntryToMySql(string connStr, string tableName, EntryRecord rec)
+        {
+            using var conn = new MySqlConnection(connStr);
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $@"
+ INSERT INTO `{tableName}` 
+ (`Date`,`Shift`,`CodeReference`,`MachineNumber`,`Area`,`AutoAdjustment`,`TopTec`,`FinalTester`,`Packaging`,`QuantityInput`,`QuantityGood`,`QuantityBad`,`Reject`)
+ VALUES (@Date,@Shift,@CodeReference,@MachineNumber,@Area,@AutoAdjustment,@TopTec,@FinalTester,@Packaging,@QuantityInput,@QuantityGood,@QuantityBad,@Reject);";
+
+            DateTime dt;
+            if (TryGetDate(rec.Date, out dt))
+                cmd.Parameters.AddWithValue("@Date", dt.Date);
+            else
+                cmd.Parameters.AddWithValue("@Date", DBNull.Value);
+
+            cmd.Parameters.AddWithValue("@Shift", (object?)rec.Shift ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@CodeReference", (object?)rec.CodeReference ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@MachineNumber", (object?)rec.MachineNumber ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@Area", (object?)rec.Area ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@AutoAdjustment", (object?)rec.ProcessAutoAdjustment ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@TopTec", (object?)rec.ProcessTopTec ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@FinalTester", (object?)rec.ProcessFinalTester ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@Packaging", (object?)rec.ProcessPackaging ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@QuantityInput", rec.QuantityInput);
+            cmd.Parameters.AddWithValue("@QuantityGood", rec.QuantityGood);
+            cmd.Parameters.AddWithValue("@QuantityBad", rec.QuantityBad);
+            cmd.Parameters.AddWithValue("@Reject", rec.Reject);
+
+            cmd.ExecuteNonQuery();
+            // retrieve last insert id
+            using var cmdId = conn.CreateCommand();
+            cmdId.CommandText = "SELECT LAST_INSERT_ID();";
+            var obj = cmdId.ExecuteScalar();
+            if (obj != null && long.TryParse(obj.ToString(), out var id)) return id;
+            return 0;
+        }
+
+        static bool UpdateEntryInMySql(string connStr, string tableName, long id, EntryRecord rec)
+        {
+            using var conn = new MySqlConnection(connStr);
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $@"
+ UPDATE `{tableName}` SET
+ `Date`=@Date, `Shift`=@Shift, `CodeReference`=@CodeReference, `MachineNumber`=@MachineNumber,
+ `Area`=@Area, `AutoAdjustment`=@AutoAdjustment, `TopTec`=@TopTec, `FinalTester`=@FinalTester,
+ `Packaging`=@Packaging, `QuantityInput`=@QuantityInput, `QuantityGood`=@QuantityGood, `QuantityBad`=@QuantityBad, `Reject`=@Reject
+ WHERE `id`=@id;";
+
+            DateTime dt;
+            if (TryGetDate(rec.Date, out dt))
+                cmd.Parameters.AddWithValue("@Date", dt.Date);
+            else
+                cmd.Parameters.AddWithValue("@Date", DBNull.Value);
+
+            cmd.Parameters.AddWithValue("@Shift", (object?)rec.Shift ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@CodeReference", (object?)rec.CodeReference ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@MachineNumber", (object?)rec.MachineNumber ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@Area", (object?)rec.Area ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@AutoAdjustment", (object?)rec.ProcessAutoAdjustment ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@TopTec", (object?)rec.ProcessTopTec ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@FinalTester", (object?)rec.ProcessFinalTester ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@Packaging", (object?)rec.ProcessPackaging ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@QuantityInput", rec.QuantityInput);
+            cmd.Parameters.AddWithValue("@QuantityGood", rec.QuantityGood);
+            cmd.Parameters.AddWithValue("@QuantityBad", rec.QuantityBad);
+            cmd.Parameters.AddWithValue("@Reject", rec.Reject);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            var rows = cmd.ExecuteNonQuery();
+            return rows > 0;
+        }
+
+        static bool DeleteEntryFromMySql(string connStr, string tableName, long id)
+        {
+            using var conn = new MySqlConnection(connStr);
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = $"DELETE FROM `{tableName}` WHERE `id`=@id;";
+            cmd.Parameters.AddWithValue("@id", id);
+            var rows = cmd.ExecuteNonQuery();
+            return rows > 0;
+        }
+
+        static bool UpdateEntryRecord(string path, string sheetName, int rowIndex, EntryRecord rec)
+        {
+            // Read existing row to get Id
+            var rows = ReadRows(path, sheetName);
+            if (rowIndex < 1 || rowIndex > rows.Count) return false;
+            var row = rows[rowIndex - 1];
+            long id = 0;
+            if (row.Length > 0 && long.TryParse(row[0], out var parsed)) id = parsed;
+
+            // Sync to DB
+            if (MySqlEnabled && !string.IsNullOrEmpty(MySqlConnectionString) && !string.IsNullOrEmpty(MySqlTableName))
+            {
+                try
+                {
+                    if (id > 0)
+                    {
+                        UpdateEntryInMySql(MySqlConnectionString, MySqlTableName, id, rec);
+                    }
+                    else
+                    {
+                        id = InsertEntryToMySql(MySqlConnectionString, MySqlTableName, rec);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Peringatan MySQL (perbarui):\n" + ex.ToString());
+                    Console.ResetColor();
+                }
+            }
+
+            // write back to Excel (Id + fields)
+            var values = rec.ToValues();
+            var withId = new string[values.Length + 1];
+            withId[0] = id > 0 ? id.ToString() : string.Empty;
+            Array.Copy(values, 0, withId, 1, values.Length);
+            return UpdateRow(path, sheetName, rowIndex, withId);
+        }
+
+        // Try parse date in multiple common formats (prefer yyyy-MM-dd)
+        static bool TryGetDate(string? input, out DateTime dt)
+        {
+            dt = default;
+            if (string.IsNullOrWhiteSpace(input)) return false;
+            var formats = new[] { "yyyy-MM-dd", "yyyy-M-d", "yyyy/MM/dd", "dd.MM.yyyy", "d.M.yyyy", "M/d/yyyy", "MM/dd/yyyy" };
+            if (DateTime.TryParseExact(input.Trim(), formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) return true;
+            if (DateTime.TryParse(input.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.None, out dt)) return true;
+            if (DateTime.TryParse(input.Trim(), CultureInfo.CurrentCulture, DateTimeStyles.None, out dt)) return true;
+            return false;
+        }
+    }
+}

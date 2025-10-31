@@ -1,0 +1,4 @@
+2025-11-01 04:39:56 - FATAL: Kesalahan dalam mode interaktif - Configure MySQL timeout setelah 15000ms
+2025-11-01 04:40:45 - FATAL: Kesalahan dalam mode interaktif - Gagal menyiapkan workbook: File tidak ditemukan: D:\Program C#\Program\Batam Schneider Entry Data (Batam S.E.D) 6.0\Batam Schneider Entry Data (Batam S.E.D) 6.0\Batam_(S_._E_._D)_Program\bin\Debug\net8.0\Batam_Data_43
+2025-11-01 04:41:20 - FATAL: Kesalahan dalam mode interaktif - Gagal menyiapkan workbook: File tidak ditemukan: D:\Program C#\Program\Batam Schneider Entry Data (Batam S.E.D) 6.0\Batam Schneider Entry Data (Batam S.E.D) 6.0\Batam_(S_._E_._D)_Program\bin\Debug\net8.0\Batam_Data_44
+2025-11-01 04:41:52 - FATAL: Kesalahan dalam mode interaktif - Gagal menyiapkan workbook: File tidak ditemukan: D:\Program C#\Program\Batam Schneider Entry Data (Batam S.E.D) 6.0\Batam Schneider Entry Data (Batam S.E.D) 6.0\Batam_(S_._E_._D)_Program\bin\Debug\net8.0\Batam_Data_45

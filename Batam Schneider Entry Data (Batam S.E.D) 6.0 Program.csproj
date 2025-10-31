@@ -1,0 +1,327 @@
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{9EB3EACF-383A-AE9B-C176-F2FED68BBDBD}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>ConsoleApplication</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>Batam_Schneider_Entry_Data__Batam_S.E.D__6._0_Program</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitattributes" />
+    <Content Include=".gitignore" />
+    <Content Include=".git\ms-persist.xml" />
+    <Content Include="Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Batam_%28S_._E_._D%29_Program.csproj.user" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Batam_%28S_._E_._D%29_Program.exe" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Batam_%28S_._E_._D%29_Program.pdb" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_%28S_._E_._D%29_Program.exe" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_%28S_._E_._D%29_Program.pdb" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\BouncyCastle.Cryptography.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\DocumentFormat.OpenXml.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Google.Protobuf.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\K4os.Compression.LZ4.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\K4os.Compression.LZ4.Streams.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\K4os.Hash.xxHash.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Bcl.AsyncInterfaces.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Bcl.HashCode.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Caching.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Configuration.Binder.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Configuration.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Logging.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Options.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Microsoft.Extensions.Primitives.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\MySql.Data.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\win-x64\native\comerr64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\win-x64\native\gssapi64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\win-x64\native\k5sprt64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\win-x64\native\krb5_64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\win-x64\native\krbcc64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Windows.Extensions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.Collections.Immutable.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.Configuration.ConfigurationManager.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.Diagnostics.EventLog.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.IO.Packaging.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.IO.Pipelines.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.Security.Cryptography.ProtectedData.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.Security.Permissions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.Text.Encodings.Web.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\System.Windows.Extensions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\ZstdSharp.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Batam_%28S_._E_._D%29_Program.exe" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Batam_%28S_._E_._D%29_Program.pdb" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\BouncyCastle.Cryptography.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\DocumentFormat.OpenXml.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\DocumentFormat.OpenXml.Framework.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Google.Protobuf.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\K4os.Compression.LZ4.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\K4os.Compression.LZ4.Streams.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\K4os.Hash.xxHash.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Bcl.AsyncInterfaces.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Bcl.HashCode.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.EntityFrameworkCore.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.EntityFrameworkCore.Relational.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Caching.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Caching.Memory.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Configuration.Binder.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Configuration.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Logging.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Logging.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Options.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\MySql.Data.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\win-x64\native\comerr64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\win-x64\native\gssapi64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\win-x64\native\k5sprt64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\win-x64\native\krb5_64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\win-x64\native\krbcc64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Windows.Extensions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.Collections.Immutable.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.Configuration.ConfigurationManager.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.Diagnostics.DiagnosticSource.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.Diagnostics.EventLog.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.IO.Packaging.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.IO.Pipelines.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.Security.Cryptography.ProtectedData.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.Security.Permissions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.Text.Encodings.Web.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\System.Windows.Extensions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\ZstdSharp.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\BouncyCastle.Cryptography.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\DocumentFormat.OpenXml.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\DocumentFormat.OpenXml.Framework.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Google.Protobuf.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\K4os.Compression.LZ4.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\K4os.Compression.LZ4.Streams.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\K4os.Hash.xxHash.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Bcl.AsyncInterfaces.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Bcl.HashCode.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.EntityFrameworkCore.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.EntityFrameworkCore.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.EntityFrameworkCore.Relational.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Caching.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Caching.Memory.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Configuration.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Configuration.Binder.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Configuration.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.DependencyInjection.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Logging.Abstractions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Logging.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Options.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Microsoft.Extensions.Primitives.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\MySql.Data.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\apphost.exe" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.csproj.FileListAbsolute.txt" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.pdb" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\refint\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\ref\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\apphost.exe" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.csproj.FileListAbsolute.txt" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.pdb" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\PublishOutputs.ac87b1a07b.txt" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\refint\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\ref\Batam_%28S_._E_._D%29_Program.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\Properties\PublishProfiles\FolderProfile.pubxml.user" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\win-x64\native\comerr64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\win-x64\native\gssapi64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\win-x64\native\k5sprt64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\win-x64\native\krb5_64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\win-x64\native\krbcc64.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\runtimes\win\lib\net8.0\System.Windows.Extensions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.Collections.Immutable.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.Configuration.ConfigurationManager.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.Diagnostics.DiagnosticSource.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.Diagnostics.EventLog.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.IO.Packaging.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.IO.Pipelines.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.Security.Cryptography.ProtectedData.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.Security.Permissions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.Text.Encodings.Web.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\System.Windows.Extensions.dll" />
+    <Content Include="Batam_%28S_._E_._D%29_Program\ZstdSharp.dll" />
+    <Content Include="LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".git\COMMIT_EDITMSG" />
+    <None Include=".git\config" />
+    <None Include=".git\description" />
+    <None Include=".git\FETCH_HEAD" />
+    <None Include=".git\HEAD" />
+    <None Include=".git\hooks\applypatch-msg.sample" />
+    <None Include=".git\hooks\commit-msg.sample" />
+    <None Include=".git\hooks\fsmonitor-watchman.sample" />
+    <None Include=".git\hooks\post-update.sample" />
+    <None Include=".git\hooks\pre-applypatch.sample" />
+    <None Include=".git\hooks\pre-commit.sample" />
+    <None Include=".git\hooks\pre-merge-commit.sample" />
+    <None Include=".git\hooks\pre-push.sample" />
+    <None Include=".git\hooks\pre-rebase.sample" />
+    <None Include=".git\hooks\pre-receive.sample" />
+    <None Include=".git\hooks\prepare-commit-msg.sample" />
+    <None Include=".git\hooks\push-to-checkout.sample" />
+    <None Include=".git\hooks\sendemail-validate.sample" />
+    <None Include=".git\hooks\update.sample" />
+    <None Include=".git\index" />
+    <None Include=".git\info\exclude" />
+    <None Include=".git\logs\HEAD" />
+    <None Include=".git\logs\refs\heads\main" />
+    <None Include=".git\logs\refs\heads\master" />
+    <None Include=".git\logs\refs\remotes\origin\HEAD" />
+    <None Include=".git\logs\refs\remotes\origin\main" />
+    <None Include=".git\logs\refs\remotes\origin\master" />
+    <None Include=".git\objects\1f\f0c423042b46cb1d617b81efb715defbe8054d" />
+    <None Include=".git\objects\55\56c4b67238865edc82902de9990c2fe4b51816" />
+    <None Include=".git\objects\66\d77892c824d26c79239a326be4e22c41095e0d" />
+    <None Include=".git\objects\78\687933d0a0629bd12e6022e60f8c68e1b9827c" />
+    <None Include=".git\objects\7e\3b00753bc2402f172b3152a2b4e09d76147c38" />
+    <None Include=".git\objects\8a\a26455d23acf904be3ed9dfb3a3efe3e49245a" />
+    <None Include=".git\objects\94\91a2fda28342ab358eaf234e1afe0c07a53d62" />
+    <None Include=".git\objects\a3\4898c3bfa4d5a0c5647d0a186f945d7670edf0" />
+    <None Include=".git\objects\b2\2e0209bc6cb88d17f5ac90ce8f3fe92785d39c" />
+    <None Include=".git\objects\b4\9fc5bb86a50fdb2e8049421085727b544a7964" />
+    <None Include=".git\objects\d4\78cc0857acddcba5861e93ff44b68c49abc557" />
+    <None Include=".git\objects\f1\0d5cd927b7408967b2244820bd02bfffeb95f6" />
+    <None Include=".git\objects\f2\865e187edfcac0c1b28e9e45e3a6398ae2f88c" />
+    <None Include=".git\objects\fb\becedecf232ee3a5cdd1d3dfc59568512e1d61" />
+    <None Include=".git\refs\heads\main" />
+    <None Include=".git\refs\heads\master" />
+    <None Include=".git\refs\remotes\origin\HEAD" />
+    <None Include=".git\refs\remotes\origin\main" />
+    <None Include=".git\refs\remotes\origin\master" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\DesignTimeBuild\.dtbcache.v2" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\FileContentIndex\08e8c005-77a0-4b32-af90-169b17dccfbd.vsidx" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\FileContentIndex\bd89c337-2860-45e7-9559-b26841e21c91.vsidx" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\FileContentIndex\cc62c87e-c526-4f40-b883-92714b14848f.vsidx" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\v18\.futdcache.v2" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\v18\.suo" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\v18\.wsuo" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\v18\DocumentLayout.backup.json" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\v18\DocumentLayout.json" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0\CopilotIndices\18.0.912.14514\CodeChunks.db" />
+    <None Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0\CopilotIndices\18.0.912.14514\SemanticSymbols.db" />
+    <None Include=".vs\ProjectEvaluation\batam schneider entry data %28batam s.e.d%29 6.0.metadata.v10.bin" />
+    <None Include=".vs\ProjectEvaluation\batam schneider entry data %28batam s.e.d%29 6.0.projects.v10.bin" />
+    <None Include=".vs\ProjectEvaluation\batam schneider entry data %28batam s.e.d%29 6.0.strings.v10.bin" />
+    <None Include=".vs\VSWorkspaceState.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\Batam_%28S_._E_._D%29_Program.csproj" />
+    <None Include="Batam_%28S_._E_._D%29_Program\Batam_%28S_._E_._D%29_Program.deps.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\Batam_%28S_._E_._D%29_Program.runtimeconfig.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_%28S_._E_._D%29_Program.deps.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_%28S_._E_._D%29_Program.runtimeconfig.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_Data_31" />
+    <None Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_Data_32" />
+    <None Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_Data_36" />
+    <None Include="Batam_%28S_._E_._D%29_Program\bin\Debug\net8.0\Batam_Data_37" />
+    <None Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Batam_%28S_._E_._D%29_Program.deps.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\bin\Release\net8.0\Batam_%28S_._E_._D%29_Program.runtimeconfig.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Batam_%28S_._E_._D%29_Program.csproj.nuget.dgspec.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Batam_%28S_._E_._D%29_Program.csproj.nuget.g.props" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Batam_%28S_._E_._D%29_Program.csproj.nuget.g.targets" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S.247881FC.Up2Date" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.AssemblyInfoInputs.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.assets.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.csproj.AssemblyReference.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.csproj.BuildWithSkipAnalyzers" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.csproj.CoreCompileInputs.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.GeneratedMSBuildEditorConfig.editorconfig" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.genruntimeconfig.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.sourcelink.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\project.assets.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\project.nuget.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S.247881FC.Up2Date" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.AssemblyInfoInputs.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.assets.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.csproj.AssemblyReference.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.csproj.CoreCompileInputs.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.GeneratedMSBuildEditorConfig.editorconfig" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.genruntimeconfig.cache" />
+    <None Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.sourcelink.json" />
+    <None Include="Batam_%28S_._E_._D%29_Program\Properties\PublishProfiles\FolderProfile.pubxml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
+    <Compile Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.AssemblyInfo.cs" />
+    <Compile Include="Batam_%28S_._E_._D%29_Program\obj\Debug\net8.0\Batam_%28S_._E_._D%29_Program.GlobalUsings.g.cs" />
+    <Compile Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs" />
+    <Compile Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.AssemblyInfo.cs" />
+    <Compile Include="Batam_%28S_._E_._D%29_Program\obj\Release\net8.0\Batam_%28S_._E_._D%29_Program.GlobalUsings.g.cs" />
+    <Compile Include="Batam_%28S_._E_._D%29_Program\Program.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include=".github\workflows\" />
+    <Folder Include=".git\objects\info\" />
+    <Folder Include=".git\objects\pack\" />
+    <Folder Include=".git\refs\tags\" />
+    <Folder Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0 Program.slnx\copilot-chat\f233b801\sessions\" />
+    <Folder Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0 Program.slnx\v18\" />
+    <Folder Include=".vs\Batam Schneider Entry Data %28Batam S.E.D%29 6.0.slnx\copilot-chat\f233b801\sessions\" />
+    <Folder Include=".vs\sd\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>
